@@ -1,16 +1,35 @@
-import { useAddress, useContract } from '@thirdweb-dev/react';
+import { useAddress, useContract, useContractData } from '@thirdweb-dev/react';
+import { ethers } from 'ethers';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
+import CountdownTimer from '../components/CountdownTimer';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import Login from '../components/Login';
+import { currency, noValueString } from '../constants';
 
 const Home: NextPage = () => {
   const address = useAddress();
-  const { isLoading } = useContract(
+  const { contract, isLoading } = useContract(
     process.env.NEXT_PUBLIC_LOTTERY_CONTRACT_ADDRESS
   );
+  const { data: remainingTickets } = useContractData(
+    contract,
+    'RemainingTickets'
+  );
+  const { data: currentWinningReward } = useContractData(
+    contract,
+    'CurrentWinningReward'
+  );
+  const { data: ticketCommission } = useContractData(
+    contract,
+    'ticketCommission'
+  );
+
+  const { data: expiration } = useContractData(contract, 'expiration');
+
+  const { data: ticketPrice } = useContractData(contract, 'ticketPrice');
 
   const [quantity, setQuantity] = useState(1);
 
@@ -35,13 +54,26 @@ const Home: NextPage = () => {
             <div className='flex justify-between p-2 space-x-2'>
               <div className='stats'>
                 <h2 className='text-sm'>Total Pool</h2>
-                <p className='text-xl'>0 MATIC</p>
+                <p className='text-xl'>
+                  {currentWinningReward
+                    ? ethers.utils.formatEther(currentWinningReward.toString())
+                    : noValueString}{' '}
+                  {currency}
+                </p>
               </div>
 
               <div className='stats'>
                 <div className='text-sm'>Tickets Remaining</div>
-                <p className='text-xl'>100</p>
+                <p className='text-xl'>
+                  {remainingTickets
+                    ? remainingTickets.toNumber()
+                    : noValueString}
+                </p>
               </div>
+            </div>
+
+            <div className='mt-5 mb-3'>
+              <CountdownTimer />
             </div>
           </div>
 
@@ -49,7 +81,12 @@ const Home: NextPage = () => {
             <div className='stats-container'>
               <div className='flex justify-between items-center text-white pb-2'>
                 <h2>Price per Ticket</h2>
-                <p>0.01 MATIC</p>
+                <p>
+                  {ticketPrice
+                    ? ethers.utils.formatEther(ticketPrice.toString())
+                    : noValueString}{' '}
+                  {currency}
+                </p>
               </div>
 
               <div className='flex text-white items-center space-x-2 bg-[#091818] border-[#004337] border p-4'>
@@ -67,12 +104,24 @@ const Home: NextPage = () => {
               <div className='space-y-2 mt-5'>
                 <div className='flex items-center justify-between text-emerald-300 text-sm italic font-extrabold'>
                   <p>Total cost of tickets</p>
-                  <p>0.01 MATIC</p>
+                  <p>
+                    {ticketPrice
+                      ? Number(
+                          ethers.utils.formatEther(ticketPrice.toString())
+                        ) * quantity
+                      : noValueString}{' '}
+                    {currency}
+                  </p>
                 </div>
 
                 <div className='flex items-center justify-between text-emerald-300 text-xs italic'>
                   <p>Service fees</p>
-                  <p>0.001 MATIC</p>
+                  <p>
+                    {ticketCommission
+                      ? ethers.utils.formatEther(ticketCommission.toString())
+                      : noValueString}{' '}
+                    {currency}
+                  </p>
                 </div>
 
                 <div className='flex items-center justify-between text-emerald-300 text-xs italic'>
@@ -81,7 +130,13 @@ const Home: NextPage = () => {
                 </div>
               </div>
 
-              <button className='mt-5 w-full bg-gradient-to-br from-orange-500 to-emerald-600 px-10 py-5 rounded-md text-white shadow-xl disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-100 disabled:cursor-not-allowed'>
+              <button
+                disabled={
+                  expiration?.toString() < Date.now().toString() ||
+                  remainingTickets?.toNumber() < quantity
+                }
+                className='mt-5 w-full bg-gradient-to-br from-orange-500 to-emerald-600 px-10 py-5 rounded-md text-white shadow-xl disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-100 disabled:cursor-not-allowed'
+              >
                 Buy Tickets
               </button>
             </div>
