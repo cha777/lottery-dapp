@@ -4,7 +4,7 @@ import Image from 'next/image';
 const Login = () => {
   const connectWithMetaMask = useMetamask();
   return (
-    <div className='bg-[#091B18] min-h-screen flex flex-col items-center justify-center text-center'>
+    <div className='bg-[#091818] min-h-screen flex flex-col items-center justify-center text-center'>
       <div className='flex flex-col items-center mb-10'>
         <Image
           src='https://i.imgur.com/4h7mAu7.png'
