@@ -35,11 +35,22 @@ const Home: NextPage = () => {
 
   const { mutateAsync: BuyTickets } = useContractCall(contract, 'BuyTickets');
 
+  const { mutateAsync: WithdrawWinnings } = useContractCall(
+    contract,
+    'WithdrawWinnings'
+  );
+
   const { data: expiration } = useContractData(contract, 'expiration');
 
   const { data: ticketPrice } = useContractData(contract, 'ticketPrice');
 
   const { data: tickets } = useContractData(contract, 'getTickets');
+
+  const { data: winnings } = useContractData(
+    contract,
+    'getWinningsForAddress',
+    address
+  );
 
   const [quantity, setQuantity] = useState(1);
   const [userTickets, setUserTickets] = useState(0);
@@ -56,6 +67,20 @@ const Home: NextPage = () => {
 
     setUserTickets(noOfUserTickets);
   }, [tickets, address]);
+
+  const onWithdrawWinnings = async () => {
+    const notification = toast.loading('Withdrawing winnings...');
+
+    try {
+      const data = await WithdrawWinnings([{}]);
+
+      toast.success('Winnings withdrawn successfully!', { id: notification });
+      console.info('contract call success', data);
+    } catch (err) {
+      toast.error('Whoops something went wrong!', { id: notification });
+      console.error('contract call failure', err);
+    }
+  };
 
   const handleClick = async () => {
     if (!ticketPrice) return;
@@ -92,6 +117,23 @@ const Home: NextPage = () => {
 
       <div className='flex-1'>
         <Header />
+
+        {winnings > 0 && (
+          <div className='max-w-md md:max-w-2xl lg:max-w-4xl mx-auto mt-5'>
+            <button
+              onClick={onWithdrawWinnings}
+              className='p-5 bg-gradient-to-b from-orange-500 to-emerald-600 animate-pulse text-center rounded-xl w-full'
+            >
+              <p className='font-bold'>Winner Winner Chicken Dinner!</p>
+              <p>
+                Total Winnings: {ethers.utils.formatEther(winnings.toString())}{' '}
+                {currency}
+              </p>
+              <br />
+              <p className='font-semibold'>Click here to withdraw</p>
+            </button>
+          </div>
+        )}
 
         <div className='space-y-5 md:space-y-0 m-5 md:flex md:flex-row items-start justify-center md:space-x-5'>
           <div className='stats-container'>
