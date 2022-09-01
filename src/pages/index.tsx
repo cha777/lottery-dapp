@@ -15,6 +15,7 @@ import Header from '../components/Header';
 import Loading from '../components/Loading';
 import Login from '../components/Login';
 import { currency, noValueString } from '../constants';
+import AdminControls from '../components/AdminControls';
 
 const Home: NextPage = () => {
   const address = useAddress();
@@ -58,6 +59,11 @@ const Home: NextPage = () => {
   const { data: lastWinnerAmount } = useContractData(
     contract,
     'lastWinnerAmount'
+  );
+
+  const { data: lotteryOperator } = useContractData(
+    contract,
+    'lotteryOperator'
   );
 
   const [quantity, setQuantity] = useState(1);
@@ -145,6 +151,12 @@ const Home: NextPage = () => {
             )}
           </div>
         </Marquee>
+
+        {lotteryOperator === address && (
+          <div className='flex justify-center'>
+            <AdminControls />
+          </div>
+        )}
 
         {winnings > 0 && (
           <div className='max-w-md md:max-w-2xl lg:max-w-4xl mx-auto mt-5'>
